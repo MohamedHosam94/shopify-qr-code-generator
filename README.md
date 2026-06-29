@@ -1,8 +1,7 @@
 # Build a Shopify app using React Router
 
-This is a Shopify app for managing QR codes. It is the code for the [Build a Shopify app using React Router tutorial](https://shopify.dev/docs/apps/getting-started/build-qr-code-app).
+This is a Shopify app for managing QR codes.
 
-You can [follow the tutorial](https://shopify.dev/docs/apps/getting-started/build-qr-code-app), or just browse the code.
 
 ## Quick start
 
@@ -100,7 +99,6 @@ React Router:
 Shopify:
 
 - [Intro to Shopify apps](https://shopify.dev/docs/apps/getting-started)
-- [Shopify App React Router docs](https://shopify.dev/docs/api/shopify-app-react-router)
 - [Shopify CLI](https://shopify.dev/docs/apps/tools/cli)
 - [Shopify App Bridge](https://shopify.dev/docs/api/app-bridge-library).
 - [Polaris Web Components](https://shopify.dev/docs/api/app-home/polaris-web-components).
