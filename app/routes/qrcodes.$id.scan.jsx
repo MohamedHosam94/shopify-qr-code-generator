@@ -1,10 +1,12 @@
 import { redirect } from "react-router";
 import invariant from "tiny-invariant";
+import { isbot } from "isbot";
 
 import { unauthenticated } from "../shopify.server";
 import {
   getDestinationUrl,
-  incrementQRCodeScans,
+  incrementQRCodeScansWithAnalytics,
+  parseUserAgent,
 } from "../models/QRCode.server";
 
 export const loader = async ({ request, params }) => {
@@ -36,6 +38,7 @@ export const loader = async ({ request, params }) => {
           }
           destination: field(key: "destination") { jsonValue }
           scans: field(key: "scans") { jsonValue }
+          analytics: field(key: "analytics") { jsonValue }
         }
       }
     `,
@@ -52,8 +55,40 @@ export const loader = async ({ request, params }) => {
   // [END fetch]
 
   // [START increment]
-  const currentScans = metaobject.scans?.jsonValue ?? 0;
-  await incrementQRCodeScans(metaobject.id, currentScans, admin.graphql);
+  const userAgent = request.headers.get("user-agent") || "";
+  const isBotUser = isbot(userAgent);
+
+  if (!isBotUser) {
+    let analytics = { os: {}, browser: {}, history: [] };
+    if (metaobject.analytics?.jsonValue) {
+      try {
+        analytics = JSON.parse(metaobject.analytics.jsonValue);
+      } catch (e) {
+        console.error("Failed to parse analytics JSON", e);
+      }
+    }
+
+    if (!analytics.os) analytics.os = {};
+    if (!analytics.browser) analytics.browser = {};
+    if (!analytics.history) analytics.history = [];
+
+    const { os, browser } = parseUserAgent(userAgent);
+    analytics.os[os] = (analytics.os[os] || 0) + 1;
+    analytics.browser[browser] = (analytics.browser[browser] || 0) + 1;
+
+    analytics.history.unshift({
+      timestamp: new Date().toISOString(),
+      os,
+      browser,
+    });
+
+    if (analytics.history.length > 10) {
+      analytics.history = analytics.history.slice(0, 10);
+    }
+
+    const currentScans = metaobject.scans?.jsonValue ?? 0;
+    await incrementQRCodeScansWithAnalytics(metaobject.id, currentScans, analytics, admin.graphql);
+  }
   // [END increment]
 
   // [START redirect]

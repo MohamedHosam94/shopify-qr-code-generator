@@ -1,9 +1,42 @@
 import qrcode from "qrcode";
 import invariant from "tiny-invariant";
 
+
+export function parseUserAgent(userAgentHeader) {
+  const ua = userAgentHeader || "";
+  let os = "Unknown";
+  let browser = "Unknown";
+
+  // Parse OS
+  if (/like Mac OS X/.test(ua) || /iPhone|iPad|iPod/.test(ua)) {
+    os = "iOS";
+  } else if (/Android/.test(ua)) {
+    os = "Android";
+  } else if (/Macintosh|Mac OS X/.test(ua)) {
+    os = "macOS";
+  } else if (/Windows/.test(ua)) {
+    os = "Windows";
+  } else if (/Linux/.test(ua)) {
+    os = "Linux";
+  }
+
+  // Parse Browser
+  if (/Edg/.test(ua)) {
+    browser = "Edge";
+  } else if (/Chrome/.test(ua) && !/Chromium/.test(ua)) {
+    browser = "Chrome";
+  } else if (/Safari/.test(ua) && !/Chrome/.test(ua) && !/Chromium/.test(ua)) {
+    browser = "Safari";
+  } else if (/Firefox/.test(ua)) {
+    browser = "Firefox";
+  }
+
+  return { os, browser };
+}
+
 // [START get-qrcode]
 const METAOBJECT_TYPE = "$app:qrcode";
-
+//  new comment
 export async function getQRCode(handle, graphql, shop) {
   const response = await graphql(
     `
@@ -36,6 +69,7 @@ export async function getQRCode(handle, graphql, shop) {
           }
           destination: field(key: "destination") { jsonValue }
           scans: field(key: "scans") { jsonValue }
+          analytics: field(key: "analytics") { jsonValue }
         }
       }
     `,
@@ -89,6 +123,7 @@ export async function getQRCodes(graphql, shop) {
             }
             destination: field(key: "destination") { jsonValue }
             scans: field(key: "scans") { jsonValue }
+            analytics: field(key: "analytics") { jsonValue }
           }
         }
       }
@@ -109,6 +144,15 @@ async function transformMetaobject(metaobject, shop) {
   const variant = metaobject.productVariant?.reference;
   const productId = metaobject.product?.jsonValue;
 
+  let analytics = { os: {}, browser: {}, history: [] };
+  if (metaobject.analytics?.jsonValue) {
+    try {
+      analytics = JSON.parse(metaobject.analytics.jsonValue);
+    } catch (e) {
+      console.error("Failed to parse analytics JSON", e);
+    }
+  }
+
   const qrCode = {
     id: metaobject.id,
     handle: metaobject.handle,
@@ -119,6 +163,7 @@ async function transformMetaobject(metaobject, shop) {
     productVariantLegacyId: variant?.legacyResourceId,
     destination: metaobject.destination?.jsonValue,
     scans: metaobject.scans?.jsonValue ?? 0,
+    analytics,
     createdAt: metaobject.updatedAt,
     productDeleted: productId && !product,
     productTitle: product?.title,
@@ -237,6 +282,36 @@ export async function incrementQRCodeScans(id, currentScans, graphql) {
       },
     },
   );
+}
+
+export async function incrementQRCodeScansWithAnalytics(id, currentScans, updatedAnalytics, graphql) {
+  const response = await graphql(
+    `
+      mutation UpdateScansAndAnalytics($id: ID!, $metaobject: MetaobjectUpdateInput!) {
+        metaobjectUpdate(id: $id, metaobject: $metaobject) {
+          metaobject { id }
+          userErrors { field message }
+        }
+      }
+    `,
+    {
+      variables: {
+        id,
+        metaobject: {
+          fields: [
+            { key: "scans", value: String(currentScans + 1) },
+            { key: "analytics", value: JSON.stringify(updatedAnalytics) }
+          ],
+        },
+      },
+    },
+  );
+
+  const responseJson = await response.json();
+  const userErrors = responseJson?.data?.metaobjectUpdate?.userErrors;
+  if (userErrors && userErrors.length > 0) {
+    console.error("Shopify Metaobject Update Errors:", JSON.stringify(userErrors, null, 2));
+  }
 }
 // [END increment-scans]
 

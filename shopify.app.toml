@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "<YOUR_CLIENT_ID>"
-name = "<YOUR_APP_NAME>"
-application_url = "<YOUR_APP_URL>"
+client_id = "ba1f93db295d079f154ce0d8dd613ef9"
+name = "qr-code-generator-v2"
+application_url = "https://example.com"
 embedded = true
 
 [build]
@@ -20,15 +20,16 @@ api_version = "2026-04"
   topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
 
-# [START access-scopes]
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "write_metaobject_definitions,write_metaobjects,write_products"
-# [END access-scopes]
+optional_scopes = [ ]
+use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = ["https://example.com/api/auth"]
 
+ 
 [product.metafields.app.demo_info]
 type = "single_line_text_field"
 name = "Demo Source Info"
@@ -37,7 +38,7 @@ description = "Tracks products created by the Shopify app template for developme
   [product.metafields.app.demo_info.access]
   admin = "merchant_read_write"
 
-# [START metaobject-definition]
+# Start of metaobject definitions
 [metaobjects.app.qrcode]
 name = "QR Code"
 description = "QR codes that link to products"
@@ -65,4 +66,8 @@ type = "single_line_text_field"
 [metaobjects.app.qrcode.fields.scans]
 name = "Scans"
 type = "number_integer"
-# [END metaobject-definition]
+
+[metaobjects.app.qrcode.fields.analytics]
+name = "Analytics"
+type = "multi_line_text_field"
+# End of metaobject definitions

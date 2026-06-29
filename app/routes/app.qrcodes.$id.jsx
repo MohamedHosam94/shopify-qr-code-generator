@@ -319,6 +319,84 @@ export default function QRCodeForm() {
             </s-stack>
           </s-section>
           {/* [END product] */}
+          {id !== "new" && (
+            <s-section heading="Scan Analytics">
+              <s-stack gap="base">
+                <s-stack gap="small-100">
+                  <s-text color="subdued">Total Scans</s-text>
+                  <div style={{ fontSize: "28px", fontWeight: "bold" }}>
+                    {qrCode.scans}
+                  </div>
+                </s-stack>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", width: "100%", marginBlock: "16px" }}>
+                  <div>
+                    <div style={{ marginBottom: "12px", borderBottom: "1px solid var(--s-color-border-subdued, #e1e3e5)", paddingBottom: "4px" }}>
+                      <s-text><strong>Operating Systems</strong></s-text>
+                    </div>
+                    {Object.keys(qrCode.analytics?.os || {}).length === 0 ? (
+                      <s-text color="subdued">No data available</s-text>
+                    ) : (
+                      <s-stack gap="small-200">
+                        {Object.entries(qrCode.analytics.os).map(([os, count]) => (
+                          <div key={os} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <s-text>{os}</s-text>
+                            <s-text><strong>{count}</strong></s-text>
+                          </div>
+                        ))}
+                      </s-stack>
+                    )}
+                  </div>
+
+                  <div>
+                    <div style={{ marginBottom: "12px", borderBottom: "1px solid var(--s-color-border-subdued, #e1e3e5)", paddingBottom: "4px" }}>
+                      <s-text><strong>Browsers</strong></s-text>
+                    </div>
+                    {Object.keys(qrCode.analytics?.browser || {}).length === 0 ? (
+                      <s-text color="subdued">No data available</s-text>
+                    ) : (
+                      <s-stack gap="small-200">
+                        {Object.entries(qrCode.analytics.browser).map(([browser, count]) => (
+                          <div key={browser} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <s-text>{browser}</s-text>
+                            <s-text><strong>{count}</strong></s-text>
+                          </div>
+                        ))}
+                      </s-stack>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "16px" }}>
+                  <div style={{ marginBottom: "12px" }}>
+                    <s-text><strong>Recent Scans Log</strong></s-text>
+                  </div>
+                  {!qrCode.analytics?.history || qrCode.analytics.history.length === 0 ? (
+                    <s-text color="subdued">No scans recorded yet</s-text>
+                  ) : (
+                    <s-table>
+                      <s-table-header-row>
+                        <s-table-header listSlot="primary">Timestamp</s-table-header>
+                        <s-table-header>OS</s-table-header>
+                        <s-table-header>Browser</s-table-header>
+                      </s-table-header-row>
+                      <s-table-body>
+                        {qrCode.analytics.history.map((scan, idx) => (
+                          <s-table-row key={idx}>
+                            <s-table-cell>
+                              {new Date(scan.timestamp).toLocaleString()}
+                            </s-table-cell>
+                            <s-table-cell>{scan.os}</s-table-cell>
+                            <s-table-cell>{scan.browser}</s-table-cell>
+                          </s-table-row>
+                        ))}
+                      </s-table-body>
+                    </s-table>
+                  )}
+                </div>
+              </s-stack>
+            </s-section>
+          )}
           {/* [START preview] */}
           <s-box slot="aside">
             <s-section heading="Preview">
